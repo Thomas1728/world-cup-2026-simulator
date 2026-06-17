@@ -23,6 +23,10 @@ No build step, no dependencies — open `index.html` and play. It also installs 
   the play-off for third place). Click a team to advance it; winners propagate
   automatically and a slot only becomes selectable once both feeders are known.
 - **National flags** for every team (via [flagcdn.com](https://flagcdn.com)).
+- **Save / share image** — export the whole bracket as a PNG. On phones this opens the
+  native share sheet (e.g. *Save to Photos* on iPhone); on desktop it downloads the file.
+- **iOS & Android friendly** — responsive touch layout, larger tap targets, horizontal
+  scroll + pinch-zoom for the bracket, and an *Add to Home Screen* hint on iPhone/iPad.
 - **Randomize** a whole tournament, **Clear winners**, or **Reset all**.
 - **Installable & offline** — add it to your desktop/phone; flags and the app shell
   are cached on first visit so it keeps working without a connection.
@@ -30,9 +34,11 @@ No build step, no dependencies — open `index.html` and play. It also installs 
 
 ## Install as an app
 
-1. Open the live demo (or any HTTPS deployment) in Chrome/Edge.
-2. Click **⬇ Install app** in the toolbar (or the install icon in the address bar).
-3. It launches in its own window and stays available offline.
+- **Desktop / Android (Chrome, Edge):** open the live demo and click **⬇ Install app**
+  in the toolbar (or the install icon in the address bar). It launches in its own window
+  and stays available offline.
+- **iPhone / iPad (Safari):** open the live demo, tap the **Share** icon, then
+  **Add to Home Screen**. (iOS has no install button — the app shows a hint banner.)
 
 ## Run locally
 
