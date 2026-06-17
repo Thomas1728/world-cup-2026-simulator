@@ -89,3 +89,7 @@ The flag code is an ISO 3166-1 alpha-2 code (e.g. `br`), or a flagcdn region cod
 Plain HTML + CSS + vanilla JavaScript in one file, plus a small service worker and web
 app manifest. Bracket connector lines are drawn with an SVG overlay computed from live
 element positions, so they stay aligned at any size.
+
+## License
+
+Released under the [MIT License](LICENSE).

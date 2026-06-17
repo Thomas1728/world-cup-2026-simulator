@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>World Cup 2026 Simulator</title>
 <meta name="description" content="Predict the 2026 FIFA World Cup — set group standings, pick the best third-placed teams, and play out the knockout bracket to the final." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="World Cup 2026 Simulator" />
+<meta property="og:description" content="Set group standings, pick the best third-placed teams, and play out the knockout bracket to the final. Installable, works offline." />
+<meta property="og:url" content="https://thomas1728.github.io/world-cup-2026-simulator/" />
+<meta property="og:image" content="https://thomas1728.github.io/world-cup-2026-simulator/og-preview.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="World Cup 2026 Simulator" />
+<meta name="twitter:description" content="Set group standings, pick winners, and play out the bracket to the final." />
+<meta name="twitter:image" content="https://thomas1728.github.io/world-cup-2026-simulator/og-preview.png" />
 <link rel="manifest" href="./manifest.webmanifest" />
 <meta name="theme-color" content="#2563eb" />
 <link rel="icon" type="image/png" href="./icon-192.png" />
@@ -255,7 +266,11 @@ for(const g of GROUP_LETTERS){
 }
 // flag image (flagcdn.com — crisp SVGs, render on every OS incl. Windows). Hidden if offline.
 function flagImg(iso){
-  return `<img class="flag" crossorigin="anonymous" src="https://flagcdn.com/w40/${iso}.png" `+
+  // crossorigin only on http(s) (needed for a clean screenshot canvas); omitted on
+  // file:// where Chrome would otherwise block the cross-origin flag images.
+  const co = (location.protocol === 'http:' || location.protocol === 'https:')
+    ? 'crossorigin="anonymous" ' : '';
+  return `<img class="flag" ${co}src="https://flagcdn.com/w40/${iso}.png" `+
          `srcset="https://flagcdn.com/w80/${iso}.png 2x" `+
          `alt="" onerror="this.classList.add('flag-missing')">`;
 }
