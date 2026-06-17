@@ -1,0 +1,10 @@
+# Claude Code preview/launch config (local tooling, not part of the app)
+.claude/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.vscode/
+.idea/
