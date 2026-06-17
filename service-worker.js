@@ -1,5 +1,5 @@
 /* World Cup 2026 Simulator — offline service worker */
-const CACHE = 'wc26-sim-v2';
+const CACHE = 'wc26-sim-v3';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest',
   './vendor/html2canvas.min.js',

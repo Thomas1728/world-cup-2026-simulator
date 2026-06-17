@@ -616,8 +616,24 @@ setTimeout(drawLinks,150);
 /* ---- Progressive Web App: offline support + installability ---- */
 // Service workers only run over http(s)/localhost — skip silently on file://
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  // Auto-update: when a newer worker takes control, reload once so the page always
+  // reflects the latest deploy — no manual cache-clearing needed. The hadController
+  // guard skips the harmless very-first-install case (avoids a needless first reload).
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(reloading || !hadController) return;
+    reloading = true; window.location.reload();
+  });
+  window.addEventListener('load', async ()=>{
+    try{
+      // updateViaCache:'none' => the worker script itself is never served from the
+      // HTTP cache, so update checks always see a fresh deploy.
+      const reg = await navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'});
+      reg.update();                                  // check for a new version right away
+      setInterval(()=>reg.update(), 60*60*1000);     // ...and hourly while the tab stays open
+      document.addEventListener('visibilitychange',()=>{ if(!document.hidden) reg.update(); });
+    }catch(e){}
   });
 }
 // "Install app" button (fires when the browser deems the PWA installable)
