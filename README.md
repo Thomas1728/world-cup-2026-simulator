@@ -26,8 +26,11 @@ No build step, no dependencies — open `index.html` and play. It also installs 
   requests, so they render on `file://`, `https`, and fully offline.
 - **Save / share image** — export the whole bracket as a PNG. On phones this opens the
   native share sheet (e.g. *Save to Photos* on iPhone); on desktop it downloads the file.
-- **iOS & Android friendly** — responsive touch layout, larger tap targets, horizontal
-  scroll + pinch-zoom for the bracket, and an *Add to Home Screen* hint on iPhone/iPad.
+- **iOS & Android friendly** — on phones/portrait the knockout stage switches to a
+  **round-by-round** view (tabs for R32 → R16 → QF → SF → Final, full-width tappable
+  match cards) instead of the wide bracket; larger tap targets and an *Add to Home
+  Screen* hint on iPhone/iPad. The wide mirrored bracket is used on larger screens.
+  The "Save / share image" export always produces the full bracket, even from a phone.
 - **Randomize** a whole tournament, **Clear winners**, or **Reset all**.
 - **Installable & offline** — add it to your desktop/phone; flags and the app shell
   are cached on first visit so it keeps working without a connection.

@@ -140,6 +140,34 @@
     background:var(--accent);color:#fff;padding:6px 16px;border-radius:20px;font-weight:700;
     font-size:13px;box-shadow:var(--shadow);white-space:nowrap;display:none}
   .champbar.show{display:block}
+
+  /* ----- mobile round-by-round knockout view ----- */
+  .bracket-mobile{display:none;margin-top:10px}
+  .round-champ{display:none;background:var(--accent);color:#fff;border-radius:10px;
+    padding:11px 14px;font-weight:700;text-align:center;margin-bottom:10px}
+  .round-tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:6px;margin-bottom:4px}
+  .round-tab{flex:0 0 auto;border:1px solid var(--line2);background:#fff;border-radius:10px;
+    padding:7px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;
+    min-width:58px}
+  .round-tab .rt-label{font-weight:700;font-size:13px;white-space:nowrap}
+  .round-tab .rt-count{font-size:10px;color:var(--muted)}
+  .round-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .round-tab.active .rt-count{color:#cfe0ff}
+  .round-tab.done .rt-label::after{content:" ✓";color:var(--q1)}
+  .round-tab.active.done .rt-label::after{color:#bbf7d0}
+  .round-name{font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.6px;margin:8px 2px 10px}
+  .round-list .node{width:100%;margin-bottom:10px}
+  .round-list .node .slot{padding:12px 13px;font-size:14px}
+  .round-list .flag{width:25px;height:17px}
+  .mcap{font-weight:700;font-size:12px;color:var(--muted);margin:16px 2px 10px;
+    border-top:1px dashed var(--line);padding-top:14px;text-transform:uppercase;letter-spacing:.5px}
+  @media (max-width:700px){
+    #bracketScroll{display:none}
+    #bracketScroll.capture-on{display:block}   /* shown in normal flow during image export */
+    .bracket-mobile{display:block}
+  }
   .legendbar{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 4px 0}
   .legendbar span{display:inline-flex;align-items:center;gap:5px}
   .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
@@ -217,14 +245,21 @@
     <span><i class="dot" style="background:var(--third)"></i> third place</span>
     <span><i class="dot" style="background:var(--win)"></i> your pick to advance</span>
   </div>
-  <div class="mobile-hint">↔ Swipe to scroll the bracket, pinch to zoom. Tip: use “📷 Save / share image” to export it.</div>
-  <div class="bracket-scroll">
+  <!-- Wide bracket (desktop / landscape) -->
+  <div class="bracket-scroll" id="bracketScroll">
     <div class="bracket-wrap" id="bracketWrap">
       <div class="champbar" id="champbar"></div>
       <svg class="links" id="links"></svg>
       <div class="bracket" id="bracket"></div>
       <div class="floatbox" id="floatThird"></div>
     </div>
+  </div>
+
+  <!-- Round-by-round view (phones / portrait) -->
+  <div class="bracket-mobile" id="bracketMobile">
+    <div class="round-champ" id="roundChamp"></div>
+    <div class="round-tabs" id="roundTabs"></div>
+    <div class="round-list" id="roundList"></div>
   </div>
 
   <footer>
@@ -488,6 +523,20 @@ function flash(el){ el.animate([{transform:'translateX(0)'},{transform:'translat
 /* =========================================================================
    RENDER — bracket
    ========================================================================= */
+// rounds for the mobile (portrait) view
+const ROUNDS = [
+  {key:'R32', label:'Round of 32', ids:['M73','M74','M75','M76','M77','M78','M79','M80','M81','M82','M83','M84','M85','M86','M87','M88']},
+  {key:'R16', label:'Round of 16', ids:['M89','M90','M91','M92','M93','M94','M95','M96']},
+  {key:'QF',  label:'Quarter-finals', ids:['M97','M98','M99','M100']},
+  {key:'SF',  label:'Semi-finals', ids:['M101','M102']},
+  {key:'FIN', label:'Final', ids:['M104','M103']},
+];
+const ROUND_SHORT = {R32:'R32', R16:'R16', QF:'QF', SF:'SF', FIN:'Final'};
+const MATCH_CAP = {M103:'Third-place play-off'};
+let currentRound = 'R32';
+const mq = window.matchMedia('(max-width: 700px)');
+const isMobile = ()=>mq.matches;
+
 function phLabel(id, f){
   if(f.t==='pos')   return f.r+f.g;            // e.g. "1E", "2A"
   if(f.t==='third') return '3'+f.set;          // e.g. "3ABCDF"
@@ -511,7 +560,8 @@ function nodeHTML(id, R, opts={}){
   const def = MATCHES[id];
   const champ = id==='M104' && R.winner;
   const cls = 'node'+(opts.final?' final':'')+(champ?' champ-node':'');
-  return `<div class="${cls}" id="node-${id}">`+
+  const idAttr = opts.noId ? '' : ` id="node-${id}"`;   // mobile cards omit ids (no clash with desktop)
+  return `<div class="${cls}"${idAttr}>`+
     `<div class="nh"><span class="mid">${id}</span><span>${META[id]||''}</span></div>`+
     slotHTML(id,'a',R.a,def,R)+
     slotHTML(id,'b',R.b,def,R)+
@@ -519,6 +569,13 @@ function nodeHTML(id, R, opts={}){
 }
 function renderBracket(){
   const {R} = resolveAll();
+  const champ = R['M104'].winner ? TEAMS[R['M104'].winner] : null;
+  if(isMobile()) renderMobileBracket(R, champ);
+  else renderDesktopBracket(R, champ);
+}
+
+// wide mirrored bracket with SVG connectors (desktop / landscape)
+function renderDesktopBracket(R, champ){
   const host=$('bracket'); host.innerHTML='';
   for(const col of COLS){
     const cdiv=document.createElement('div');
@@ -526,21 +583,49 @@ function renderBracket(){
     cdiv.innerHTML = col.ids.map(id=>nodeHTML(id,R[id],{final:id==='M104'})).join('');
     host.appendChild(cdiv);
   }
-  // floating third-place box
   $('floatThird').innerHTML = `<div class="cap">Play-off for third place</div>`+
     nodeHTML('M103',R['M103']);
-
-  // champion banner
-  const champ = R['M104'].winner ? TEAMS[R['M104'].winner] : null;
   const cb=$('champbar');
   if(champ){ cb.textContent='🏆 Champion: '+champ.name; cb.classList.add('show'); }
   else cb.classList.remove('show');
-
-  // click handlers
   host.querySelectorAll('.slot.pickable').forEach(s=>s.addEventListener('click',onPick));
   $('floatThird').querySelectorAll('.slot.pickable').forEach(s=>s.addEventListener('click',onPick));
-
   drawLinks();
+}
+
+// round-by-round vertical cards (phones / portrait)
+function renderMobileBracket(R, champ){
+  // clear desktop DOM so it can't show stale nodes behind the mobile view
+  $('bracket').innerHTML=''; $('floatThird').innerHTML=''; $('champbar').classList.remove('show');
+
+  const rc=$('roundChamp');
+  rc.innerHTML = champ ? `🏆 Champion: ${champ.name}` : '';
+  rc.style.display = champ ? 'block' : 'none';
+
+  // round tabs (with progress count + done tick)
+  const tabs=$('roundTabs'); tabs.innerHTML='';
+  for(const rd of ROUNDS){
+    const decided = rd.ids.filter(id=>R[id].winner).length;
+    const done = decided===rd.ids.length;
+    const b=document.createElement('button');
+    b.className='round-tab'+(rd.key===currentRound?' active':'')+(done?' done':'');
+    b.innerHTML=`<span class="rt-label">${ROUND_SHORT[rd.key]}</span>`+
+                `<span class="rt-count">${decided}/${rd.ids.length}</span>`;
+    b.addEventListener('click',()=>{ currentRound=rd.key; renderBracket();
+      b.scrollIntoView({inline:'center', block:'nearest'}); });
+    tabs.appendChild(b);
+  }
+
+  // selected round's matches as full-width cards
+  const rd = ROUNDS.find(r=>r.key===currentRound) || ROUNDS[0];
+  const list=$('roundList');
+  let html = `<div class="round-name">${rd.label}</div>`;
+  for(const id of rd.ids){
+    if(MATCH_CAP[id]) html += `<div class="mcap">${MATCH_CAP[id]}</div>`;
+    html += nodeHTML(id, R[id], {final:id==='M104', noId:true});
+  }
+  list.innerHTML = html;
+  list.querySelectorAll('.slot.pickable').forEach(s=>s.addEventListener('click',onPick));
 }
 function onPick(e){
   const s=e.currentTarget, id=s.dataset.match, team=s.dataset.team;
@@ -605,11 +690,18 @@ function randomFill(){
   save(); renderAll();
 }
 
-window.addEventListener('resize',()=>drawLinks());
+let lastMobile = isMobile();
+function onResize(){
+  const m = isMobile();
+  if(m !== lastMobile){ lastMobile = m; renderBracket(); }  // swap layout at the breakpoint
+  else if(!m){ drawLinks(); }                               // desktop: keep connectors aligned
+}
+window.addEventListener('resize', onResize);
+mq.addEventListener('change', onResize);
+
 renderAll();
-// links need a tick after layout/fonts settle
-requestAnimationFrame(drawLinks);
-setTimeout(drawLinks,150);
+// connectors need a tick after layout/fonts settle (desktop only)
+if(!isMobile()){ requestAnimationFrame(drawLinks); setTimeout(drawLinks,150); }
 </script>
 
 <script>
@@ -672,11 +764,30 @@ shotBtn.addEventListener('click', async () => {
   const node = document.getElementById('bracketWrap');
   const label = shotBtn.textContent;
   shotBtn.disabled = true; shotBtn.textContent = '⏳ Rendering…';
+  // On phones the wide bracket isn't rendered — build it off-screen so the shared
+  // image is always the full bracket (not just the current round).
+  const mobile = isMobile();
+  let restoreMobile = false;
   try{
-    const canvas = await html2canvas(node, {
-      backgroundColor:'#ffffff', scale:2, useCORS:true, logging:false,
-      width:node.scrollWidth, height:node.scrollHeight, windowWidth:node.scrollWidth
-    });
+    if(mobile){
+      const {R} = resolveAll();
+      renderDesktopBracket(R, R['M104'].winner ? TEAMS[R['M104'].winner] : null);
+      document.getElementById('bracketScroll').classList.add('capture-on');
+      restoreMobile = true;
+      await waitImages(node);
+      drawLinks();
+      await new Promise(r=>requestAnimationFrame(r));
+    }
+    // The bracket is ~1640px wide already, so a modest scale keeps the PNG crisp
+    // without producing a huge, slow-to-render canvas (esp. on phones).
+    // Race against a timeout so a stuck render can never leave the button hung.
+    const canvas = await Promise.race([
+      html2canvas(node, {
+        backgroundColor:'#ffffff', scale:1.5, useCORS:true, logging:false,
+        width:node.scrollWidth, height:node.scrollHeight, windowWidth:node.scrollWidth
+      }),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Image render timed out — try again')), 25000))
+    ]);
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
     const file = new File([blob], 'world-cup-2026-bracket.png', {type:'image/png'});
     // Native share sheet (great on iPhone → "Save to Photos"); fall back to download.
@@ -693,9 +804,20 @@ shotBtn.addEventListener('click', async () => {
   }catch(err){
     alert('Sorry, could not create the image: ' + (err && err.message ? err.message : err));
   }finally{
+    if(restoreMobile){
+      document.getElementById('bracketScroll').classList.remove('capture-on');
+      renderBracket();   // back to the round-by-round view
+    }
     shotBtn.disabled = false; shotBtn.textContent = label;
   }
 });
+// resolve once every <img> in a container has finished loading (or errored)
+function waitImages(container){
+  const imgs=[...container.querySelectorAll('img')].filter(i=>!i.complete);
+  return Promise.all(imgs.map(i=>new Promise(res=>{
+    i.addEventListener('load',res,{once:true}); i.addEventListener('error',res,{once:true});
+  })));
+}
 </script>
 </body>
 </html>
