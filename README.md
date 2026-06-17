@@ -22,7 +22,8 @@ No build step, no dependencies — open `index.html` and play. It also installs 
 - **Knockout bracket** — the full official mirrored layout (matches M73–M104, plus
   the play-off for third place). Click a team to advance it; winners propagate
   automatically and a slot only becomes selectable once both feeders are known.
-- **National flags** for every team (via [flagcdn.com](https://flagcdn.com)).
+- **National flags** for every team, **bundled locally** in `./flags` — no external
+  requests, so they render on `file://`, `https`, and fully offline.
 - **Save / share image** — export the whole bracket as a PNG. On phones this opens the
   native share sheet (e.g. *Save to Photos* on iPhone); on desktop it downloads the file.
 - **iOS & Android friendly** — responsive touch layout, larger tap targets, horizontal
@@ -72,8 +73,9 @@ The flag code is an ISO 3166-1 alpha-2 code (e.g. `br`), or a flagcdn region cod
 | `index.html` | The entire app (HTML + CSS + JS) |
 | `manifest.webmanifest` | PWA metadata (name, icons, theme) |
 | `service-worker.js` | Offline caching of the app shell + flags |
-| `icon-*.png`, `apple-touch-icon.png` | App icons |
-| `generate_icons.py` | Regenerates the icons (needs Pillow) |
+| `flags/` | Bundled national-flag PNGs (one per team) |
+| `icon-*.png`, `apple-touch-icon.png`, `og-preview.png` | App icons + social card |
+| `generate_icons.py`, `generate_og.py` | Regenerate the icons / social card (needs Pillow) |
 
 ## Notes & accuracy
 
@@ -82,7 +84,8 @@ The flag code is an ISO 3166-1 alpha-2 code (e.g. `br`), or a flagcdn region cod
 - The third-place **eligibility** sets (the `3ABCDF`-style labels) are official. The
   exact pairing chosen *within* the legal options can differ from FIFA's Annex C
   lookup in some scenarios, but the result is always a legal, rematch-free allocation.
-- Flags are loaded from flagcdn.com (cached for offline use after the first online visit).
+- Flags live in `./flags` (one-time download from flagcdn.com), so they display with no
+  network access. Filenames are the flag codes used in `GROUPS` (e.g. `br.png`, `gb-sct.png`).
 
 ## Tech
 

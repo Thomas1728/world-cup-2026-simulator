@@ -266,13 +266,10 @@ for(const g of GROUP_LETTERS){
 }
 // flag image (flagcdn.com — crisp SVGs, render on every OS incl. Windows). Hidden if offline.
 function flagImg(iso){
-  // crossorigin only on http(s) (needed for a clean screenshot canvas); omitted on
-  // file:// where Chrome would otherwise block the cross-origin flag images.
-  const co = (location.protocol === 'http:' || location.protocol === 'https:')
-    ? 'crossorigin="anonymous" ' : '';
-  return `<img class="flag" ${co}src="https://flagcdn.com/w40/${iso}.png" `+
-         `srcset="https://flagcdn.com/w80/${iso}.png 2x" `+
-         `alt="" onerror="this.classList.add('flag-missing')">`;
+  // Flags are bundled locally in ./flags (same-origin), so they display on file://,
+  // https and offline alike, and are captured in screenshots without any CORS issues.
+  return `<img class="flag" src="./flags/${iso}.png" alt="" `+
+         `onerror="this.classList.add('flag-missing')">`;
 }
 
 // feeder constructors
