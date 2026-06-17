@@ -9,7 +9,7 @@ No build step, no dependencies — open `index.html` and play. It also installs 
 **Progressive Web App** (works offline, runs in its own window) once served over HTTPS.
 
 <!-- LIVE_DEMO -->
-> 🔗 **Live demo:** _published via GitHub Pages — link added after the first deploy._
+> 🔗 **Live demo:** https://thomas1728.github.io/world-cup-2026-simulator/
 
 ## Features
 
